@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -12,18 +13,30 @@ export async function POST(request: Request) {
       );
     }
 
-    const response = await fetch("http://localhost:11434/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama3.2",
-        messages: [
-          {
-            role: "system",
-            content: `
-You are LifeCare AI, a helpful healthcare information assistant.
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      console.error("GEMINI_API_KEY is not configured");
+      return NextResponse.json(
+        { error: "AI service is not configured." },
+        { status: 500 }
+      );
+    }
+
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [
+              {
+                text: `You are LifeCare AI, a helpful healthcare
+information assistant.
 
 Give simple, clear and safe health information.
 
@@ -32,50 +45,55 @@ Important rules:
 - Do not prescribe medicines.
 - Do not tell users to stop prescribed medicines.
 - Give general health information only.
-- If symptoms could indicate an emergency, advise the user to contact emergency medical services or a qualified healthcare professional.
-- Encourage users to consult a doctor for persistent, severe, or concerning symptoms.
-- Keep answers easy to understand.
-            `,
+- If symptoms could indicate an emergency,
+  advise the user to contact emergency medical
+  services or a qualified healthcare professional.
+- Encourage users to consult a doctor for
+  persistent, severe, or concerning symptoms.
+- Keep answers easy to understand.`,
+              },
+            ],
           },
-          {
-            role: "user",
-            content: message,
-          },
-        ],
-        stream: false,
-      }),
-    });
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: message }],
+            },
+          ],
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-
-      console.error("Ollama Error:", errorText);
+      console.error("Gemini API error:", response.status, errorText);
 
       return NextResponse.json(
-        {
-          error: "Local AI service is not responding.",
-        },
-        { status: 500 }
+        { error: "AI service request failed. Please try again." },
+        { status: 502 }
       );
     }
 
     const data = await response.json();
 
-    return NextResponse.json({
-      reply:
-        data.message?.content ||
-        "Sorry, I could not generate a response.",
-    });
+    const reply = data.candidates?.[0]?.content?.parts
+      ?.map((part: { text?: string }) => part.text || "")
+      .join("")
+      .trim();
+
+    if (!reply) {
+      return NextResponse.json(
+        { error: "The AI could not generate a response." },
+        { status: 502 }
+      );
+    }
+
+    return NextResponse.json({ reply });
   } catch (error) {
-    console.error("AI API Error:", error);
+    console.error("AI API error:", error);
 
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to connect to local AI.",
-      },
+      { error: "Unable to connect to the AI service." },
       { status: 500 }
     );
   }
