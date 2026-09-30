@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -15,48 +14,48 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.GEMINI_API_KEY;
 
-    console.log("Gemini API key available:", !!apiKey);
-
     if (!apiKey) {
-      console.error("GEMINI_API_KEY is not configured");
-
       return NextResponse.json(
-        { error: "AI service is not configured." },
+        { error: "Gemini AI service is not configured." },
         { status: 500 }
       );
     }
 
     const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
         },
         body: JSON.stringify({
           systemInstruction: {
             parts: [
               {
-                text: `You are LifeCare AI, a helpful healthcare information assistant.
+                text: `
+You are LifeCare AI, a helpful healthcare information assistant.
 
 Give simple, clear and safe health information.
 
 Important rules:
 - Do not claim to diagnose diseases.
-- Do not prescribe medicines.
+- Do not prescribe medicines or dosages.
 - Do not tell users to stop prescribed medicines.
 - Give general health information only.
 - If symptoms could indicate an emergency, advise the user to contact emergency medical services or a qualified healthcare professional.
 - Encourage users to consult a doctor for persistent, severe, or concerning symptoms.
-- Keep answers easy to understand.`,
+- Keep answers easy to understand.
+                `,
               },
             ],
           },
           contents: [
             {
-              role: "user",
-              parts: [{ text: message }],
+              parts: [
+                {
+                  text: message,
+                },
+              ],
             },
           ],
         }),
@@ -66,44 +65,29 @@ Important rules:
     if (!response.ok) {
       const errorText = await response.text();
 
-      console.error(
-        "Gemini API error:",
-        response.status,
-        errorText
-      );
+      console.error("Gemini API Error:", errorText);
 
       return NextResponse.json(
         {
-          error: "AI service request failed. Please try again.",
+          error: "Gemini AI could not generate a response.",
         },
-        { status: 502 }
+        { status: 500 }
       );
     }
 
     const data = await response.json();
 
-    const reply = data.candidates?.[0]?.content?.parts
-      ?.map((part: { text?: string }) => part.text || "")
-      .join("")
-      .trim();
-
-    if (!reply) {
-      console.error("Gemini returned no response:", data);
-
-      return NextResponse.json(
-        { error: "The AI could not generate a response." },
-        { status: 502 }
-      );
-    }
+    const reply =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "Sorry, I could not generate a response.";
 
     return NextResponse.json({ reply });
-
   } catch (error) {
-    console.error("AI API error:", error);
+    console.error("AI API Error:", error);
 
     return NextResponse.json(
       {
-        error: "Unable to connect to the AI service.",
+        error: "Unable to connect to Gemini AI.",
       },
       { status: 500 }
     );
