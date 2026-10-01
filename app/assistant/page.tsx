@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -24,11 +25,9 @@ export default function AssistantPage() {
   const [messages, setMessages] = useState<Message[]>([
     INITIAL_MESSAGE,
   ]);
-
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
-  // Reference to the bottom of the chat
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // Automatically scroll to the latest message
@@ -38,7 +37,7 @@ export default function AssistantPage() {
     });
   }, [messages, isTyping]);
 
-  // Send message to AI backend
+  // Send message to the AI backend
   const sendMessage = async (messageText?: string) => {
     const question = (messageText ?? input).trim();
 
@@ -46,22 +45,16 @@ export default function AssistantPage() {
       return;
     }
 
-    // Add user's message
     const userMessage: Message = {
       role: "user",
       text: question,
     };
 
-    setMessages((previous) => [
-      ...previous,
-      userMessage,
-    ]);
-
+    setMessages((previous) => [...previous, userMessage]);
     setInput("");
     setIsTyping(true);
 
     try {
-      // Send message to Next.js API
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -72,17 +65,14 @@ export default function AssistantPage() {
         }),
       });
 
-      // Safely read API response
       const data = await response.json();
 
-      // Check API error
       if (!response.ok) {
         throw new Error(
           data?.error || "Something went wrong."
         );
       }
 
-      // Add AI response
       const assistantMessage: Message = {
         role: "assistant",
         text:
@@ -126,23 +116,14 @@ export default function AssistantPage() {
   const clearChat = () => {
     setMessages([INITIAL_MESSAGE]);
     setInput("");
-    setIsTyping(false);
   };
 
   return (
     <main className="min-h-screen bg-slate-50">
-
-      {/* ================= HEADER ================= */}
-
+      {/* HEADER */}
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-
-          {/* Logo */}
-
-          <Link
-            href="/"
-            className="flex items-center gap-3"
-          >
+          <Link href="/" className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-xl text-white shadow-sm">
               ❤️
             </div>
@@ -151,17 +132,13 @@ export default function AssistantPage() {
               <h1 className="font-bold text-blue-700">
                 LifeCare AI
               </h1>
-
               <p className="text-xs text-slate-500">
                 Health Assistant
               </p>
             </div>
           </Link>
 
-          {/* Header Buttons */}
-
           <div className="flex items-center gap-2">
-
             <button
               type="button"
               onClick={clearChat}
@@ -177,20 +154,14 @@ export default function AssistantPage() {
             >
               ← Home
             </Link>
-
           </div>
-
         </div>
       </header>
 
-      {/* ================= MAIN ================= */}
-
+      {/* MAIN CONTENT */}
       <section className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-
-        {/* ================= TITLE ================= */}
-
+        {/* TITLE */}
         <div className="text-center">
-
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-3xl shadow-sm">
             🤖
           </div>
@@ -203,19 +174,13 @@ export default function AssistantPage() {
             Ask questions about general health, wellness,
             nutrition, fitness, sleep, and common health concerns.
           </p>
-
         </div>
 
-        {/* ================= CHAT BOX ================= */}
-
+        {/* CHAT BOX */}
         <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg">
-
           {/* CHAT HEADER */}
-
           <div className="flex items-center justify-between bg-blue-600 px-5 py-4 text-white">
-
             <div className="flex items-center gap-3">
-
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-xl">
                 🤖
               </div>
@@ -224,24 +189,19 @@ export default function AssistantPage() {
                 <h3 className="font-bold">
                   LifeCare AI Assistant
                 </h3>
-
                 <p className="text-xs text-blue-100">
                   ● Online
                 </p>
               </div>
-
             </div>
 
             <span className="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold">
               AI
             </span>
-
           </div>
 
-          {/* ================= MESSAGES ================= */}
-
+          {/* MESSAGES */}
           <div className="min-h-[420px] max-h-[520px] space-y-4 overflow-y-auto bg-slate-50 p-4 sm:p-5">
-
             {messages.map((message, index) => (
               <div
                 key={`${message.role}-${index}`}
@@ -251,7 +211,6 @@ export default function AssistantPage() {
                     : "justify-start"
                 }`}
               >
-
                 <div
                   className={`max-w-[90%] rounded-2xl px-4 py-3 sm:max-w-[80%] ${
                     message.role === "user"
@@ -259,52 +218,33 @@ export default function AssistantPage() {
                       : "rounded-bl-md bg-white text-slate-700 shadow-sm ring-1 ring-slate-200"
                   }`}
                 >
-
                   <p className="whitespace-pre-wrap text-sm leading-6">
                     {message.text}
                   </p>
-
                 </div>
-
               </div>
             ))}
 
             {/* TYPING INDICATOR */}
-
             {isTyping && (
               <div className="flex justify-start">
-
                 <div className="rounded-2xl rounded-bl-md bg-white px-5 py-3 shadow-sm ring-1 ring-slate-200">
-
                   <div className="flex items-center gap-1">
-
                     <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400" />
-
                     <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:150ms]" />
-
                     <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:300ms]" />
-
                   </div>
-
                 </div>
-
               </div>
             )}
 
-            {/* Scroll target */}
-
             <div ref={messagesEndRef} />
-
           </div>
 
-          {/* ================= INPUT AREA ================= */}
-
+          {/* INPUT AREA */}
           <div className="border-t border-slate-200 bg-white p-4">
-
             <div className="flex flex-col gap-3 sm:flex-row">
-
               <div className="relative flex-1">
-
                 <input
                   type="text"
                   value={input}
@@ -315,13 +255,12 @@ export default function AssistantPage() {
                   disabled={isTyping}
                   maxLength={500}
                   placeholder="Type your health question..."
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-16 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-16 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100 disabled:text-slate-500"
                 />
 
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
                   {input.length}/500
                 </span>
-
               </div>
 
               <button
@@ -332,27 +271,21 @@ export default function AssistantPage() {
               >
                 {isTyping ? "Thinking..." : "Send"}
               </button>
-
             </div>
 
-            <p className="mt-2 text-center text-xs text-slate-400">
+            <p className="mt-2 text-center text-xs text-slate-500">
               Press Enter to send
             </p>
-
           </div>
-
         </div>
 
-        {/* ================= QUICK QUESTIONS ================= */}
-
+        {/* QUICK QUESTIONS */}
         <div className="mt-8">
-
           <h3 className="text-center font-bold text-slate-800">
             Try asking
           </h3>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-
             {quickQuestions.map((question) => (
               <button
                 type="button"
@@ -364,75 +297,40 @@ export default function AssistantPage() {
                 💬 {question}
               </button>
             ))}
-
           </div>
-
         </div>
 
-        {/* ================= FEATURES ================= */}
-
+        {/* FEATURES */}
         <div className="mt-10 grid gap-4 sm:grid-cols-3">
-
-          {/* Feature 1 */}
-
           <div className="rounded-2xl bg-white p-5 text-center shadow-sm ring-1 ring-slate-200">
-
-            <div className="text-3xl">
-              💬
-            </div>
-
-            <h3 className="mt-3 font-bold">
-              Ask Questions
-            </h3>
-
+            <div className="text-3xl">💬</div>
+            <h3 className="mt-3 font-bold">Ask Questions</h3>
             <p className="mt-2 text-sm leading-5 text-slate-500">
               Ask about general health and wellness topics.
             </p>
-
           </div>
 
-          {/* Feature 2 */}
-
           <div className="rounded-2xl bg-white p-5 text-center shadow-sm ring-1 ring-slate-200">
-
-            <div className="text-3xl">
-              💡
-            </div>
-
-            <h3 className="mt-3 font-bold">
-              Get Guidance
-            </h3>
-
+            <div className="text-3xl">💡</div>
+            <h3 className="mt-3 font-bold">Get Guidance</h3>
             <p className="mt-2 text-sm leading-5 text-slate-500">
               Receive simple educational health information.
             </p>
-
           </div>
 
-          {/* Feature 3 */}
-
           <div className="rounded-2xl bg-white p-5 text-center shadow-sm ring-1 ring-slate-200">
-
-            <div className="text-3xl">
-              🩺
-            </div>
-
+            <div className="text-3xl">🩺</div>
             <h3 className="mt-3 font-bold">
               Know When to Seek Help
             </h3>
-
             <p className="mt-2 text-sm leading-5 text-slate-500">
               Serious symptoms should be discussed with a professional.
             </p>
-
           </div>
-
         </div>
 
-        {/* ================= DISCLAIMER ================= */}
-
+        {/* HEALTH DISCLAIMER */}
         <div className="mt-8 rounded-2xl border border-yellow-200 bg-yellow-50 p-5">
-
           <h3 className="font-bold text-yellow-900">
             ⚠️ Important Health Notice
           </h3>
@@ -444,21 +342,15 @@ export default function AssistantPage() {
             emergency medical concern, contact local emergency
             services or a qualified healthcare professional.
           </p>
-
         </div>
-
       </section>
 
-      {/* ================= FOOTER ================= */}
-
+      {/* FOOTER */}
       <footer className="border-t bg-white py-6">
-
         <div className="mx-auto max-w-6xl px-6 text-center text-sm text-slate-500">
           © 2026 LifeCare AI • Your Intelligent Health Companion
         </div>
-
       </footer>
-
     </main>
   );
 }
